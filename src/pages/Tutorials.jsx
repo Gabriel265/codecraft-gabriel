@@ -4,11 +4,11 @@ export default function Tutorials() {
   const [tweets, setTweets] = useState([]);
 
   useEffect(() => {
-    fetch('http://localhost:8888/.netlify/functions/fetchTweets') // update if hosted
-      .then(res => res.json())
-      .then(setTweets)
-      .catch(err => console.error('Error loading tweets', err));
-  }, []);
+  fetch('/.netlify/functions/fetchTweets')
+    .then(res => res.json())
+    .then(setTweets)
+    .catch(err => console.error('Error loading tweets', err));
+}, []);
 
   return (
     <div className="max-w-4xl mx-auto px-4">

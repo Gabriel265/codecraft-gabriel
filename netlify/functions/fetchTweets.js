@@ -1,8 +1,6 @@
-import fetch from 'node-fetch';
-
 let cachedTweets = null;
 let lastFetched = 0;
-const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+const CACHE_DURATION = 5 * 60 * 1000;
 
 export const handler = async () => {
   const BEARER_TOKEN = process.env.TWITTER_BEARER;
@@ -10,14 +8,13 @@ export const handler = async () => {
 
   const now = Date.now();
   if (cachedTweets && now - lastFetched < CACHE_DURATION) {
-    console.log('✅ Serving from cache');
     return {
       statusCode: 200,
       body: JSON.stringify(cachedTweets),
     };
   }
 
-  const res = await fetch(
+  const response = await fetch(
     `https://api.twitter.com/2/users/${userId}/tweets?max_results=10&tweet.fields=created_at,text,id,attachments&expansions=attachments.media_keys&media.fields=url,preview_image_url`,
     {
       headers: {
@@ -26,15 +23,14 @@ export const handler = async () => {
     }
   );
 
-  if (res.status === 429) {
-    console.log('⚠️ Rate limit hit. Returning cached or empty data.');
+  if (response.status === 429) {
     return {
       statusCode: 429,
-      body: JSON.stringify(cachedTweets || []),
+      body: JSON.stringify({ error: 'Rate limit hit. Try again later.' }),
     };
   }
 
-  const data = await res.json();
+  const data = await response.json();
 
   const mediaMap = {};
   if (data.includes?.media) {
@@ -48,7 +44,6 @@ export const handler = async () => {
     return { ...tweet, images };
   });
 
-  // Cache them
   cachedTweets = enrichedTweets;
   lastFetched = now;
 
